@@ -15,11 +15,7 @@ namespace Blob
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
-        TiledMap map;
-        TiledMapRenderer renderer;
-        Camera2D camera;
-        Texture2D whiteRectangle;
-        Player player;
+        GameMode mode;
 
         public Blob()
         {
@@ -39,9 +35,8 @@ namespace Blob
         protected override void Initialize() {
             // TODO: Add your initialization logic here
             InputState.Init();
-            ViewportAdapter adapter = new BoxingViewportAdapter(Window, GraphicsDevice, 800, 480);
-            camera = new Camera2D(adapter);
-            player = new Player();
+            AssetManager.Init(Content);
+            mode = new SinglePlayer(Window, GraphicsDevice);
             base.Initialize();
         }
 
@@ -52,13 +47,6 @@ namespace Blob
         protected override void LoadContent() {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
-            map = Content.Load<TiledMap>("Sandbox");
-            renderer = new TiledMapRenderer(GraphicsDevice);
-
-            whiteRectangle = new Texture2D(GraphicsDevice, 1, 1);
-            whiteRectangle.SetData(new[] { Color.White });
         }
 
         /// <summary>
@@ -79,10 +67,8 @@ namespace Blob
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-
             // TODO: Add your update logic here
-            player.Update(gameTime.GetElapsedSeconds());
-            camera.LookAt(new Vector2((int) player.Position.X, (int) player.Position.Y));
+            mode.Update(gameTime.GetElapsedSeconds());
 
             base.Update(gameTime);
         }
@@ -95,8 +81,9 @@ namespace Blob
             GraphicsDevice.Clear(Color.Black);
 
             // TODO: Add your drawing code here
-            spriteBatch.Begin(transformMatrix: camera.GetViewMatrix());
-            renderer.Draw(map, camera.GetViewMatrix());
+            Matrix view = mode.GetViewMatrix();
+            spriteBatch.Begin(transformMatrix: view);
+            mode.Draw(spriteBatch);
             spriteBatch.End();
 
             base.Draw(gameTime);
